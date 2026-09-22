@@ -1,0 +1,20 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 2,
+	"name": "manage-cart/cart-trigger",
+	"title": "ManageCart Cart Trigger",
+	"category": "widgets",
+	"icon": "cart",
+	"description": "Use this instead of WooCommerce Mini-Cart when you want the ManageCart Side Cart drawer.",
+	"keywords": [ "cart", "mini cart", "manage cart", "side cart", "woocommerce" ],
+	"textdomain": "manage-cart",
+	"supports": {
+		"html": false,
+		"multiple": true,
+		"customClassName": false,
+		"align": false,
+		"inserter": true
+	},
+	"editorScript": "file:./index.js",
+	"editorStyle": "file:./editor.css"
+}

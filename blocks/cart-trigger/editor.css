@@ -1,0 +1,13 @@
+/**
+ * Editor-only styling for the manage-cart/cart-trigger block's
+ * placeholder preview (see index.js). Registered via block.json's
+ * `editorStyle`, so this loads only inside the block editor/Site
+ * Editor — never on the storefront, which always renders the real
+ * button through Menu_Cart_Trigger::render_block() instead (see
+ * assets/css/frontend.css for that button's actual styling).
+ */
+.manage-cart-block-editor-preview .components-placeholder__label {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}

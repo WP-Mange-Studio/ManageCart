@@ -1,0 +1,1270 @@
+/**
+ * Manage Cart — frontend cart trigger, overlay, and panel styles
+ * (Phase 3A, plus Phase 3B-1 Part 1 cart action UI: quantity controls,
+ * remove button, and the aria-live status area).
+ *
+ * No external fonts, CDNs, images, or libraries. Mobile-first: the cart
+ * panel is a bottom sheet by default; desktop drawer/popup positioning is
+ * layered on above the 769px breakpoint. All selectors use the
+ * manage-cart- prefix.
+ *
+ * Phase 3G-2B: the panel's background, header background/text, item
+ * name/subtotal text, primary ("Checkout"/"Start Shopping") button
+ * colors, and rounded-corner radius now read the saved Side Cart →
+ * Appearance settings via the `--manage-cart-panel-bg-color`,
+ * `--manage-cart-header-bg-color`, `--manage-cart-header-text-color`,
+ * `--manage-cart-body-text-color`, `--manage-cart-checkout-btn-bg-color`,
+ * `--manage-cart-checkout-btn-text-color`, and `--manage-cart-panel-radius`
+ * custom properties (see Cart_Renderer::render_panel(), which writes them
+ * inline on the panel element from Side_Cart_Settings::get_settings()).
+ * Every one of these falls back to the exact value this file already used
+ * before this phase, so the drawer, popup, and mobile bottom sheet all
+ * look unchanged until a merchant actually edits Side Cart → Appearance.
+ *
+ * Phase 3G-3B: the floating trigger button's background, icon color,
+ * count badge background/text colors, size, and corner radius now read
+ * the saved Floating Cart → Appearance settings the same way, via the
+ * `--manage-cart-trigger-bg-color`, `--manage-cart-trigger-icon-color`,
+ * `--manage-cart-trigger-badge-bg-color`, `--manage-cart-trigger-badge-text-color`,
+ * `--manage-cart-trigger-size`, and `--manage-cart-trigger-radius` custom
+ * properties (see Cart_Renderer::render_trigger() and
+ * Cart_Renderer::get_trigger_appearance_style_string(), which write them
+ * inline on the button from Floating_Cart_Settings::get_settings()).
+ * Every one of these falls back to the exact fixed value this file
+ * already used before this phase, so the button looks unchanged until a
+ * merchant actually edits Floating Cart → Appearance.
+ *
+ * The Cart UX pass restructures `.manage-cart-panel-actions` into a
+ * column layout: a `.manage-cart-panel-actions-row` holding the new
+ * secondary "Continue Shopping" button alongside "View Cart" (wrapping
+ * onto individual lines if the panel is ever too narrow to fit both),
+ * with the primary "Checkout" button kept outside that row so it always
+ * spans the full row width. No other footer/action styling changes.
+ */
+
+.manage-cart-root {
+	--manage-cart-accent: #7c3aed;
+	--manage-cart-accent-2: #ec4899;
+	--manage-cart-ink: #1d2327;
+	--manage-cart-muted: #6b7280;
+	--manage-cart-border: #e3e6ea;
+	--manage-cart-surface: #ffffff;
+	--manage-cart-warning: #b45309;
+	--manage-cart-warning-bg: #fef3c7;
+	--manage-cart-success: #15803d;
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.manage-cart-root * {
+	box-sizing: border-box;
+}
+
+/* Scroll lock while the panel is open. */
+body.manage-cart-scroll-lock {
+	overflow: hidden;
+}
+
+/* Floating trigger button.
+   Default corner offsets (used if a modifier class below somehow doesn't
+   match, e.g. no JS/CSS custom property support) fall back to the same
+   20px used before Phase 3E-1; the inline --manage-cart-trigger-h-offset /
+   --manage-cart-trigger-v-offset custom properties (see
+   Cart_Renderer::render_trigger()) override these from the saved Floating
+   Cart "Horizontal offset" / "Vertical offset" settings. */
+.manage-cart-trigger {
+	position: fixed;
+	right: var( --manage-cart-trigger-h-offset, 20px );
+	bottom: var( --manage-cart-trigger-v-offset, 20px );
+	z-index: 999998;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: var( --manage-cart-trigger-size, 58px );
+	height: var( --manage-cart-trigger-size, 58px );
+	padding: 0;
+	border: 0;
+	border-radius: var( --manage-cart-trigger-radius, 50% );
+	background: var( --manage-cart-trigger-bg-color, linear-gradient( 135deg, var( --manage-cart-accent ), var( --manage-cart-accent-2 ) ) );
+	color: var( --manage-cart-trigger-icon-color, #ffffff );
+	cursor: grab;
+	touch-action: none;
+	box-shadow: 0 10px 24px rgba( 124, 58, 237, 0.35 ), 0 2px 6px rgba( 0, 0, 0, 0.15 );
+	transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* Floating trigger position (Phase 3E-1). Exactly one of these matches the
+   `manage-cart-trigger--{position}` modifier class Cart_Renderer::render_trigger()
+   always adds alongside the base `.manage-cart-trigger` class above, so each
+   selects the correct pair of screen edges and resets the other pair (in
+   case a visitor's saved drag position from assets/js/frontend-cart.js
+   hasn't already overridden all four with an explicit inline style). */
+.manage-cart-trigger--bottom-right {
+	right: var( --manage-cart-trigger-h-offset, 20px );
+	bottom: var( --manage-cart-trigger-v-offset, 20px );
+	top: auto;
+	left: auto;
+}
+
+.manage-cart-trigger--bottom-left {
+	left: var( --manage-cart-trigger-h-offset, 20px );
+	bottom: var( --manage-cart-trigger-v-offset, 20px );
+	top: auto;
+	right: auto;
+}
+
+.manage-cart-trigger--top-right {
+	right: var( --manage-cart-trigger-h-offset, 20px );
+	top: var( --manage-cart-trigger-v-offset, 20px );
+	bottom: auto;
+	left: auto;
+}
+
+.manage-cart-trigger--top-left {
+	left: var( --manage-cart-trigger-h-offset, 20px );
+	top: var( --manage-cart-trigger-v-offset, 20px );
+	bottom: auto;
+	right: auto;
+}
+
+/* The trigger sets its own `display: flex` above, which (per the normal
+   CSS cascade) would otherwise override the browser's default `[hidden]`
+   rule and keep the button visible while the cart panel is open. Force it
+   hidden explicitly whenever the `hidden` attribute is present. */
+#manage-cart-trigger[hidden] {
+	display: none !important;
+}
+
+/* Theme button-color/shape compatibility.
+   Cart_Renderer::render_trigger() renders the floating trigger as a plain
+   `<button>`, and several popular themes ship global "Buttons" styling
+   that targets bare `button`/`.button` elements site-wide — Astra in
+   particular applies its Customizer-level button background and text
+   color with its own `!important`, which otherwise wins over the
+   single-class `.manage-cart-trigger` rule above regardless of source
+   order, replacing the merchant's saved Floating Cart → Appearance color
+   with Astra's global button blue. Twenty Twenty-Five and Hello
+   Elementor don't `!important` their own button color the same way, but
+   can still occasionally win on ordinary specificity/order grounds
+   depending on what else loads after this stylesheet, so the same fix
+   covers all three. Hello Elementor additionally ships a global button
+   *shape* (via the active Elementor kit's site-wide Buttons style,
+   which targets a bare `button` element too) that forces its own
+   border-radius the same way, squaring off a merchant's saved circular
+   Floating Cart, so border-radius gets the identical treatment here.
+   This re-states only the settings-driven properties that are ever
+   actually at risk — background, icon color, and corner radius — scoped
+   narrowly to this one button via its existing `id="manage-cart-trigger"`
+   combined with its own class (specificity 1,1,0, well above a theme's
+   own `button`/`.button` selectors or an Elementor kit's class-scoped
+   button rule), rather than a broad theme override or an `!important` on
+   the whole `.manage-cart-trigger` rule above. Border-radius wins on
+   specificity alone, same as background/color below it, without needing
+   `!important` of its own. Every other Floating Cart appearance property
+   (size, offsets) has no theme "global button" equivalent fighting it,
+   so those stay in the single rule above, unmodified and without
+   `!important`. Still reads the very same `--manage-cart-trigger-bg-color`
+   / `--manage-cart-trigger-icon-color` / `--manage-cart-trigger-radius`
+   custom properties Cart_Renderer::get_trigger_appearance_style_string()
+   already writes inline, so a merchant who hasn't touched these settings
+   still gets the exact same default gradient/icon color/50% radius as
+   before. */
+#manage-cart-trigger.manage-cart-trigger {
+	background: var( --manage-cart-trigger-bg-color, linear-gradient( 135deg, var( --manage-cart-accent ), var( --manage-cart-accent-2 ) ) ) !important;
+	color: var( --manage-cart-trigger-icon-color, #ffffff ) !important;
+	border-radius: var( --manage-cart-trigger-radius, 50% );
+}
+
+/* Theme button-style isolation for ManageCart's other own controls.
+   The same class of theme/page-builder "global Buttons" styling
+   described above (a bare `button` element selector, as Hello
+   Elementor's active Elementor kit ships) can also repaint or reshape
+   every other plain `<button>` ManageCart renders — the Menu Cart
+   Trigger, the Side Cart close button, the quantity +/- buttons, the
+   remove buttons, the coupon toggle/Remove-coupon/Apply controls, and
+   the Side Cart footer buttons (Checkout/View Cart/Continue Shopping) —
+   turning their intentionally transparent/muted icon-button styling or
+   their own saved colors into the theme's global button color and
+   radius. Each selector below simply re-states that control's own
+   background/color/border/radius exactly as already defined at its
+   original rule further down this file, scoped narrowly via that
+   control's own id (or, for the repeated per-item controls, the
+   single #manage-cart-panel id every one of them already lives inside)
+   combined with its existing class — never a broad `button` or
+   `.button` theme override, and never `!important`, since specificity
+   alone (an id in the selector) already outranks a theme's class- or
+   element-scoped button rule. Nothing here changes any property other
+   than the ones already at risk. */
+#manage-cart-close.manage-cart-panel-close {
+	background: transparent;
+	color: var( --manage-cart-ink );
+	border: 0;
+	border-radius: 8px;
+	padding: 0;
+}
+
+button.manage-cart-menu-trigger[data-manage-cart-menu-trigger] {
+	background: transparent;
+	color: var( --manage-cart-menu-trigger-icon-color, #1d2327 );
+	border: 0;
+	border-radius: 50%;
+	padding: 0;
+}
+
+#manage-cart-panel .manage-cart-qty-btn {
+	background: #f5f5f7;
+	color: var( --manage-cart-ink );
+	border: 0;
+	border-radius: 0;
+	padding: 0;
+}
+
+#manage-cart-panel .manage-cart-item-remove {
+	background: transparent;
+	color: var( --manage-cart-muted );
+	border: 0;
+	border-radius: 6px;
+	padding: 0;
+}
+
+#manage-cart-panel .manage-cart-applied-coupon-remove {
+	background: transparent;
+	color: var( --manage-cart-muted );
+	border: 0;
+	padding: 0;
+}
+
+#manage-cart-coupon-toggle.manage-cart-coupon-toggle {
+	background: transparent;
+	color: var( --manage-cart-accent );
+	border: 0;
+	padding: 0;
+}
+
+/* Covers the Checkout/View Cart/Continue Shopping footer buttons and,
+   since it also lives inside #manage-cart-panel and carries the same
+   base class, the coupon "Apply" button (.manage-cart-btn.manage-cart-btn--secondary.manage-cart-coupon-apply). */
+#manage-cart-panel .manage-cart-btn {
+	border: 2px solid transparent;
+	border-radius: 10px;
+}
+
+#manage-cart-panel .manage-cart-btn.manage-cart-btn--primary {
+	background: var( --manage-cart-checkout-btn-bg-color, linear-gradient( 135deg, var( --manage-cart-accent ), var( --manage-cart-accent-2 ) ) );
+	color: var( --manage-cart-checkout-btn-text-color, #ffffff );
+}
+
+#manage-cart-panel .manage-cart-btn.manage-cart-btn--secondary {
+	background: transparent;
+	border-color: var( --manage-cart-border );
+	color: var( --manage-cart-ink );
+}
+
+.manage-cart-trigger:hover {
+	transform: translateY( -2px );
+	box-shadow: 0 14px 28px rgba( 124, 58, 237, 0.4 ), 0 3px 8px rgba( 0, 0, 0, 0.18 );
+}
+
+.manage-cart-trigger:focus-visible {
+	outline: 3px solid #1d2327;
+	outline-offset: 3px;
+}
+
+.manage-cart-trigger--dragging {
+	cursor: grabbing;
+	transition: none;
+}
+
+.manage-cart-trigger--dragging:hover {
+	transform: none;
+}
+
+.manage-cart-trigger-icon {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+/* Selector scoped via the trigger's own #manage-cart-trigger id (rather
+   than the bare `.manage-cart-trigger-count` class alone) for the same
+   theme-compatibility reason as the button-level rule above — this badge
+   is a plain `<span>`, though, which none of Astra, Twenty Twenty-Five,
+   or Hello Elementor's global button color settings target, so no
+   `!important` is needed here to keep the saved badge background/text
+   color reliable. */
+#manage-cart-trigger .manage-cart-trigger-count {
+	position: absolute;
+	top: -4px;
+	right: -4px;
+	min-width: 20px;
+	height: 20px;
+	padding: 0 5px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 999px;
+	background: var( --manage-cart-trigger-badge-bg-color, #1d2327 );
+	color: var( --manage-cart-trigger-badge-text-color, #ffffff );
+	font-size: 11px;
+	font-weight: 700;
+	line-height: 1;
+	border: 2px solid #ffffff;
+}
+
+#manage-cart-trigger .manage-cart-trigger-count--zero {
+	display: none;
+}
+
+/* Menu Cart Trigger shortcode ([manage_cart_trigger] — see
+   Menu_Cart_Trigger::render_shortcode()). Renders inline wherever a
+   theme/menu/page-builder places it (a header, a nav menu, a Gutenberg
+   or Elementor widget area), unlike the fixed-position `.manage-cart-trigger`
+   floating button above, so it needs its own compact, non-fixed layout
+   rules rather than reusing that class directly. It deliberately reuses
+   the same inline basket SVG icon markup (Cart_Renderer::BASKET_ICON_PATH_D)
+   and a matching pill-shaped count badge for a consistent ManageCart look,
+   with its own `--manage-cart-menu-trigger-*` custom properties (falling
+   back to the same accent/ink colors used above) so it can sit anywhere
+   in the page — including outside the `.manage-cart-root` wrapper that
+   defines --manage-cart-accent etc. — without depending on inheriting
+   those variables. Clicking it never opens anything of its own: it only
+   asks the existing #manage-cart-panel to open (assets/js/frontend-cart.js). */
+.manage-cart-menu-trigger {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 40px;
+	height: 40px;
+	padding: 0;
+	border: 0;
+	border-radius: 50%;
+	background: transparent;
+	color: var( --manage-cart-menu-trigger-icon-color, #1d2327 );
+	cursor: pointer;
+	line-height: 0;
+	vertical-align: middle;
+}
+
+.manage-cart-menu-trigger:hover {
+	background: rgba( 0, 0, 0, 0.06 );
+}
+
+.manage-cart-menu-trigger:focus-visible {
+	outline: 2px solid var( --manage-cart-menu-trigger-icon-color, #7c3aed );
+	outline-offset: 2px;
+}
+
+.manage-cart-menu-trigger-icon {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.manage-cart-menu-trigger-count {
+	position: absolute;
+	top: -2px;
+	right: -2px;
+	min-width: 16px;
+	height: 16px;
+	padding: 0 4px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 999px;
+	background: var( --manage-cart-menu-trigger-badge-bg-color, #1d2327 );
+	color: var( --manage-cart-menu-trigger-badge-text-color, #ffffff );
+	font-size: 10px;
+	font-weight: 700;
+	line-height: 1;
+	border: 2px solid #ffffff;
+}
+
+/* Overlay behind the panel. */
+.manage-cart-overlay {
+	position: fixed;
+	inset: 0;
+	z-index: 999996;
+	background: rgba( 17, 17, 20, 0.5 );
+	opacity: 0;
+	transition: opacity 0.25s ease;
+}
+
+.manage-cart-overlay.is-open {
+	opacity: 1;
+}
+
+/* Panel: mobile-first bottom sheet. */
+.manage-cart-panel {
+	position: fixed;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	top: auto;
+	width: 100%;
+	max-height: 85vh;
+	z-index: 999997;
+	display: flex;
+	flex-direction: column;
+	background: var( --manage-cart-panel-bg-color, var( --manage-cart-surface ) );
+	border-radius: var( --manage-cart-panel-radius, 16px ) var( --manage-cart-panel-radius, 16px ) 0 0;
+	box-shadow: 0 -10px 32px rgba( 0, 0, 0, 0.22 );
+	transform: translateY( 100% );
+	transition: transform 0.3s ease;
+	color: var( --manage-cart-ink );
+}
+
+.manage-cart-panel.is-open {
+	transform: translateY( 0 );
+}
+
+.manage-cart-panel-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	padding: 16px 18px;
+	background: var( --manage-cart-header-bg-color, transparent );
+	border-bottom: 1px solid var( --manage-cart-border );
+	flex: 0 0 auto;
+}
+
+.manage-cart-panel-title {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin: 0;
+	font-size: 17px;
+	font-weight: 700;
+	color: var( --manage-cart-header-text-color, var( --manage-cart-ink ) );
+}
+
+.manage-cart-panel-title-icon {
+	display: inline-flex;
+	color: var( --manage-cart-accent );
+}
+
+.manage-cart-panel-title-count {
+	font-weight: 600;
+	color: var( --manage-cart-header-text-color, var( --manage-cart-muted ) );
+}
+
+.manage-cart-panel-close {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 32px;
+	height: 32px;
+	padding: 0;
+	border: 0;
+	border-radius: 8px;
+	background: transparent;
+	color: var( --manage-cart-ink );
+	cursor: pointer;
+}
+
+.manage-cart-panel-close:hover {
+	background: #f3f4f6;
+}
+
+.manage-cart-panel-close:focus-visible {
+	outline: 3px solid var( --manage-cart-accent );
+	outline-offset: 2px;
+}
+
+/* Undo notice (Free — Undo Removed Cart Item, Part 1). Rendered as a
+   direct child of the panel, between the header and the body, so it is
+   never affected by the item-list/empty-state rebuilds that only ever
+   touch .manage-cart-panel-body. Deliberately its own compact
+   background/layout, clearly distinct from the Pro Cart Note field
+   (assets/css/cart-note.css in manage-cart-pro), which lives in the
+   footer instead. */
+.manage-cart-undo-notice {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	flex: 0 0 auto;
+	position: relative;
+	overflow: hidden;
+	padding: 10px 18px;
+	background: #f5f0ff;
+	border-bottom: 1px solid var( --manage-cart-border );
+	opacity: 0;
+	transform: translateY( -4px );
+	transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.manage-cart-undo-notice[hidden] {
+	display: none;
+}
+
+.manage-cart-undo-notice.is-visible {
+	opacity: 1;
+	transform: translateY( 0 );
+}
+
+.manage-cart-undo-notice-text {
+	flex: 1 1 auto;
+	min-width: 0;
+	font-size: 13px;
+	font-weight: 600;
+	color: var( --manage-cart-ink );
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.manage-cart-undo-notice-btn {
+	flex: 0 0 auto;
+	border: 0;
+	background: transparent;
+	color: var( --manage-cart-accent );
+	font-size: 13px;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.02em;
+	cursor: pointer;
+	padding: 4px 8px;
+	border-radius: 6px;
+}
+
+.manage-cart-undo-notice-btn:hover:not(:disabled) {
+	background: rgba( 124, 58, 237, 0.12 );
+}
+
+.manage-cart-undo-notice-btn:focus-visible {
+	outline: 3px solid var( --manage-cart-accent );
+	outline-offset: 2px;
+}
+
+.manage-cart-undo-notice-btn:disabled {
+	opacity: 0.6;
+	cursor: default;
+}
+
+/* Compact "Undo (6)" seconds-remaining text (Undo notice countdown
+   setting). Empty and takes up no visible space unless the "Show Undo
+   countdown" setting is on, in which case frontend-cart.js writes the
+   ticking number into it. Tabular figures keep the button from
+   twitching in width as the digit changes each second. */
+.manage-cart-undo-notice-countdown {
+	font-variant-numeric: tabular-nums;
+	margin-left: 2px;
+}
+
+/* Decorative-only countdown bar (aria-hidden in the markup): shrinks
+   over the same 6 seconds the notice is shown, purely as a visual cue
+   alongside the timer already running in JS — no number is shown, so
+   it never competes for space with the compact single-row layout. */
+.manage-cart-undo-notice-bar {
+	position: absolute;
+	left: 0;
+	bottom: 0;
+	height: 3px;
+	width: 100%;
+	background: var( --manage-cart-accent );
+	transform-origin: left center;
+	transform: scaleX( 1 );
+}
+
+.manage-cart-undo-notice.is-counting .manage-cart-undo-notice-bar {
+	transition: transform 6s linear;
+	transform: scaleX( 0 );
+}
+
+@media ( prefers-reduced-motion: reduce ) {
+	.manage-cart-undo-notice {
+		transition: none;
+	}
+
+	.manage-cart-undo-notice-bar {
+		display: none;
+	}
+}
+
+.manage-cart-panel-body {
+	flex: 1 1 auto;
+	overflow-y: auto;
+	padding: 12px 18px;
+}
+
+/* Cart items. */
+.manage-cart-items {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.manage-cart-item {
+	display: flex;
+	gap: 12px;
+	padding: 14px 0;
+	border-bottom: 1px solid var( --manage-cart-border );
+}
+
+.manage-cart-item:last-child {
+	border-bottom: 0;
+}
+
+/* Phase 3B-1 Part 2: dimmed while a Store API request for this item is
+   in flight. Its own controls are also disabled via the disabled
+   attribute, which already blocks further interaction. */
+.manage-cart-item--pending {
+	opacity: 0.55;
+}
+
+.manage-cart-item-thumb {
+	flex: 0 0 auto;
+	width: 60px;
+	height: 60px;
+	border-radius: 10px;
+	overflow: hidden;
+	background: #f5f5f7;
+}
+
+/* Groups the remove button above the product image at the top-left of the
+   item row (Phase 3C). Column layout so the button sits above the thumb;
+   when the image is hidden (Side Cart "Show product image" off) this
+   wrapper holds only the remove button, still anchored top-left. */
+.manage-cart-item-top {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 4px;
+	flex: 0 0 auto;
+}
+
+.manage-cart-item-thumb img {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.manage-cart-item-details {
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
+.manage-cart-item-name {
+	font-size: 14px;
+	font-weight: 600;
+	line-height: 1.35;
+	margin-bottom: 4px;
+	color: var( --manage-cart-body-text-color, var( --manage-cart-ink ) );
+}
+
+.manage-cart-item-name a {
+	color: var( --manage-cart-body-text-color, var( --manage-cart-ink ) );
+	text-decoration: none;
+}
+
+.manage-cart-item-name a:hover {
+	color: var( --manage-cart-accent );
+	text-decoration: underline;
+}
+
+.manage-cart-item-attrs {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	margin-bottom: 6px;
+}
+
+.manage-cart-item-attr {
+	font-size: 11px;
+	color: var( --manage-cart-muted );
+	background: #f5f5f7;
+	border-radius: 999px;
+	padding: 2px 8px;
+}
+
+/* Sale savings display (Phase 3B-1 Part 5): struck-through regular price
+   plus a small "Save X%" badge, shown only for line items with a real,
+   current WooCommerce sale discount. Purely informational — no controls. */
+.manage-cart-item-sale {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 6px;
+	margin-bottom: 6px;
+}
+
+.manage-cart-item-regular-price {
+	font-size: 12px;
+	color: var( --manage-cart-muted );
+}
+
+.manage-cart-item-regular-price del {
+	text-decoration: line-through;
+}
+
+.manage-cart-item-save-badge {
+	font-size: 11px;
+	font-weight: 700;
+	line-height: 1;
+	color: #ffffff;
+	background: var( --manage-cart-accent-2 );
+	border-radius: 999px;
+	padding: 3px 8px;
+	white-space: nowrap;
+}
+
+.manage-cart-item-meta {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+	font-size: 13px;
+}
+
+/* Low stock badge (Phase 3B): shown below a cart item when the product's
+   real, currently-tracked WooCommerce stock is positive and at or below
+   the configured threshold. Purely informational — no controls. */
+.manage-cart-item-low-stock {
+	margin-top: 6px;
+}
+
+.manage-cart-item-low-stock-badge {
+	display: inline-block;
+	font-size: 11px;
+	font-weight: 700;
+	line-height: 1;
+	color: var( --manage-cart-warning );
+	background: var( --manage-cart-warning-bg );
+	border-radius: 999px;
+	padding: 3px 8px;
+	white-space: nowrap;
+}
+
+.manage-cart-item-meta-end {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin-left: auto;
+}
+
+.manage-cart-item-qty {
+	color: var( --manage-cart-muted );
+}
+
+.manage-cart-item-subtotal {
+	font-weight: 700;
+	color: var( --manage-cart-body-text-color, var( --manage-cart-ink ) );
+}
+
+/* Quantity stepper (Phase 3B-1 Part 1: markup/UI only, no live updates yet). */
+.manage-cart-qty-stepper {
+	display: inline-flex;
+	align-items: center;
+	gap: 0;
+	border: 1px solid var( --manage-cart-border );
+	border-radius: 8px;
+	overflow: hidden;
+}
+
+.manage-cart-qty-btn {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 30px;
+	height: 30px;
+	padding: 0;
+	border: 0;
+	background: #f5f5f7;
+	color: var( --manage-cart-ink );
+	cursor: pointer;
+	line-height: 1;
+}
+
+.manage-cart-qty-btn:hover {
+	background: #ebebee;
+}
+
+.manage-cart-qty-btn:focus-visible {
+	outline: 2px solid var( --manage-cart-accent );
+	outline-offset: -2px;
+}
+
+.manage-cart-qty-btn:disabled,
+.manage-cart-qty-input:disabled,
+.manage-cart-item-remove:disabled {
+	cursor: not-allowed;
+	opacity: 0.6;
+}
+
+.manage-cart-qty-input {
+	width: 40px;
+	height: 30px;
+	border: 0;
+	border-left: 1px solid var( --manage-cart-border );
+	border-right: 1px solid var( --manage-cart-border );
+	text-align: center;
+	font-size: 13px;
+	color: var( --manage-cart-ink );
+	background: var( --manage-cart-surface );
+	-moz-appearance: textfield;
+}
+
+.manage-cart-qty-input::-webkit-outer-spin-button,
+.manage-cart-qty-input::-webkit-inner-spin-button {
+	-webkit-appearance: none;
+	margin: 0;
+}
+
+.manage-cart-qty-input:focus-visible {
+	outline: 2px solid var( --manage-cart-accent );
+	outline-offset: -2px;
+}
+
+/* Remove button — repositioned to the top-left of the item row, above
+   the product image (Phase 3C; see .manage-cart-item-top). Sized down
+   slightly from its previous 30x30 so it sits tidily above the 60px
+   thumbnail; still an accessible icon-only button with its own
+   aria-label set per item in the markup. */
+.manage-cart-item-remove {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 26px;
+	height: 26px;
+	padding: 0;
+	border: 0;
+	background: transparent;
+	color: var( --manage-cart-muted );
+	cursor: pointer;
+	border-radius: 6px;
+	transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.manage-cart-item-remove:hover {
+	color: #d64545;
+	background: #fdeeee;
+}
+
+.manage-cart-item-remove:focus-visible {
+	outline: 2px solid var( --manage-cart-accent );
+	outline-offset: 1px;
+}
+
+/* Visually hidden but still available to assistive technology. */
+.manage-cart-visually-hidden {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect( 0, 0, 0, 0 );
+	white-space: nowrap;
+	border: 0;
+}
+
+/* aria-live status region for future success/error messages; visually
+   hidden until it has content, but always present so announcements are
+   not missed. */
+.manage-cart-status {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect( 0, 0, 0, 0 );
+	white-space: nowrap;
+	border: 0;
+}
+
+/* Empty state. */
+.manage-cart-empty {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	text-align: center;
+	padding: 36px 16px;
+	color: var( --manage-cart-muted );
+}
+
+.manage-cart-empty-icon {
+	color: var( --manage-cart-accent );
+	margin-bottom: 12px;
+	opacity: 0.85;
+}
+
+.manage-cart-empty-title {
+	margin: 0 0 4px;
+	font-size: 15px;
+	font-weight: 700;
+	color: var( --manage-cart-ink );
+}
+
+.manage-cart-empty-text {
+	margin: 0 0 18px;
+	font-size: 13px;
+}
+
+/* Footer: subtotal + actions. */
+.manage-cart-panel-footer {
+	flex: 0 0 auto;
+	padding: 14px 18px calc( 14px + env( safe-area-inset-bottom, 0px ) );
+	border-top: 1px solid var( --manage-cart-border );
+	background: var( --manage-cart-surface );
+}
+
+/* Coupon section (Phase 3F-1): "Have a coupon?" toggle + code form,
+   shown above the Subtotal row. */
+.manage-cart-coupon {
+	margin-bottom: 12px;
+}
+
+/* Applied-coupons list (Phase 3H-1): code, discount amount, and a
+   Remove button per coupon, shown above the "Have a coupon?" toggle
+   whenever at least one coupon is currently applied. */
+.manage-cart-applied-coupons {
+	list-style: none;
+	margin: 0 0 10px;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.manage-cart-applied-coupon {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 6px 10px;
+	border: 1px solid var( --manage-cart-border );
+	border-radius: 8px;
+	background: var( --manage-cart-surface );
+}
+
+.manage-cart-applied-coupon-code {
+	font-size: 12px;
+	font-weight: 700;
+	letter-spacing: 0.02em;
+	color: var( --manage-cart-ink );
+}
+
+.manage-cart-applied-coupon-amount {
+	font-size: 12px;
+	font-weight: 600;
+	color: var( --manage-cart-success );
+}
+
+.manage-cart-applied-coupon-remove {
+	margin-left: auto;
+	padding: 0;
+	border: 0;
+	background: transparent;
+	color: var( --manage-cart-muted );
+	font-size: 12px;
+	font-weight: 600;
+	text-decoration: underline;
+	cursor: pointer;
+}
+
+.manage-cart-applied-coupon-remove:hover {
+	color: var( --manage-cart-accent );
+}
+
+.manage-cart-applied-coupon-remove:focus-visible {
+	outline: 2px solid var( --manage-cart-accent );
+	outline-offset: 2px;
+}
+
+.manage-cart-applied-coupon-remove:disabled {
+	cursor: not-allowed;
+	opacity: 0.6;
+}
+
+.manage-cart-coupon-toggle {
+	display: inline-flex;
+	align-items: center;
+	padding: 0;
+	border: 0;
+	background: transparent;
+	color: var( --manage-cart-accent );
+	font-size: 13px;
+	font-weight: 600;
+	text-decoration: underline;
+	cursor: pointer;
+}
+
+.manage-cart-coupon-toggle:hover {
+	opacity: 0.85;
+}
+
+.manage-cart-coupon-toggle:focus-visible {
+	outline: 2px solid var( --manage-cart-accent );
+	outline-offset: 2px;
+}
+
+.manage-cart-coupon-form {
+	display: flex;
+	gap: 8px;
+	margin-top: 10px;
+}
+
+/* The form sets its own `display: flex` above, which (per the normal
+   CSS cascade) would otherwise override the browser's default `[hidden]`
+   rule and keep the coupon input/Apply button visible before the
+   toggle is clicked. Force it hidden explicitly whenever the `hidden`
+   attribute is present, matching the same fix already applied to
+   #manage-cart-trigger above. */
+.manage-cart-coupon-form[hidden] {
+	display: none !important;
+}
+
+.manage-cart-coupon-input {
+	flex: 1 1 auto;
+	min-width: 0;
+	height: 40px;
+	padding: 0 12px;
+	border: 1px solid var( --manage-cart-border );
+	border-radius: 8px;
+	font-size: 13px;
+	color: var( --manage-cart-ink );
+	background: var( --manage-cart-surface );
+}
+
+.manage-cart-coupon-input:focus-visible {
+	outline: 2px solid var( --manage-cart-accent );
+	outline-offset: -1px;
+}
+
+.manage-cart-coupon-input:disabled {
+	cursor: not-allowed;
+	opacity: 0.6;
+}
+
+.manage-cart-coupon-apply {
+	flex: 0 0 auto;
+	padding: 0 18px;
+	height: 40px;
+}
+
+.manage-cart-coupon-apply:disabled {
+	cursor: not-allowed;
+	opacity: 0.6;
+}
+
+/* Total savings row: a small, subtle summary of the cart's combined sale
+   discount, shown above the Subtotal row only when it's greater than
+   zero. Uses the plugin's existing muted/accent palette (not a neon
+   green) to stay visually consistent with the rest of the footer. */
+.manage-cart-savings-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 8px;
+	font-size: 13px;
+}
+
+.manage-cart-savings-label {
+	color: var( --manage-cart-muted );
+	font-weight: 600;
+}
+
+.manage-cart-savings-value {
+	font-weight: 700;
+	color: var( --manage-cart-accent );
+}
+
+.manage-cart-subtotal-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 12px;
+	font-size: 14px;
+}
+
+.manage-cart-subtotal-label {
+	color: var( --manage-cart-muted );
+	font-weight: 600;
+}
+
+.manage-cart-subtotal-value {
+	font-weight: 700;
+	font-size: 16px;
+	color: var( --manage-cart-ink );
+}
+
+/* Coupon discount row: aggregate discount across every currently applied
+   coupon, shown below Subtotal only when a coupon is applied. Uses the
+   plugin's secondary accent color so it reads distinctly from the
+   product-savings row above it. */
+.manage-cart-coupon-discount-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 8px;
+	font-size: 13px;
+}
+
+.manage-cart-coupon-discount-label {
+	color: var( --manage-cart-muted );
+	font-weight: 600;
+}
+
+.manage-cart-coupon-discount-value {
+	font-weight: 700;
+	color: var( --manage-cart-accent-2 );
+}
+
+/* Total row: the prominent, final figure at the bottom of the totals
+   block, set apart from Subtotal/Coupon discount with a divider and
+   larger type. */
+.manage-cart-total-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin: 4px 0 14px;
+	padding-top: 10px;
+	border-top: 1px solid var( --manage-cart-border );
+	font-size: 15px;
+}
+
+.manage-cart-total-label {
+	color: var( --manage-cart-ink );
+	font-weight: 700;
+}
+
+.manage-cart-total-value {
+	font-weight: 800;
+	font-size: 19px;
+	color: var( --manage-cart-ink );
+}
+
+.manage-cart-panel-actions {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+/* Continue Shopping + View Cart share this row so the footer never has
+   to squeeze three buttons onto one line; Checkout stays outside this
+   row as its own full-width primary button — .manage-cart-panel-actions
+   is a column flex container, so Checkout stretches to the full row
+   width automatically (the default cross-axis `align-items: stretch`),
+   while the rule just below resets its flex-basis so it sizes to its
+   own content height instead of inheriting the row buttons' 120px
+   flex-basis (which would apply to height, not width, in a column
+   container). When Continue Shopping is omitted (no WooCommerce Shop
+   page configured), View Cart is simply alone in the row and still
+   takes the full row width via its own flex: 1 1 120px below.
+   flex-wrap on the row is a safety net for very narrow panels/large
+   text zoom: each button gets its own line rather than overflowing or
+   clipping. */
+.manage-cart-panel-actions-row {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+}
+
+.manage-cart-btn {
+	flex: 1 1 120px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 11px 16px;
+	border-radius: 10px;
+	font-size: 14px;
+	font-weight: 700;
+	text-decoration: none;
+	text-align: center;
+	cursor: pointer;
+	border: 2px solid transparent;
+}
+
+/* Checkout is a direct child of the column-direction .manage-cart-panel-actions,
+   not of .manage-cart-panel-actions-row, so its flex-basis controls
+   height there, not width. Reset it to auto (natural content height);
+   its full width still comes from the column container's default
+   `align-items: stretch`. */
+.manage-cart-panel-actions > .manage-cart-btn {
+	flex: 0 0 auto;
+}
+
+.manage-cart-btn--primary {
+	background: var( --manage-cart-checkout-btn-bg-color, linear-gradient( 135deg, var( --manage-cart-accent ), var( --manage-cart-accent-2 ) ) );
+	color: var( --manage-cart-checkout-btn-text-color, #ffffff );
+}
+
+.manage-cart-btn--primary:hover {
+	opacity: 0.92;
+	color: var( --manage-cart-checkout-btn-text-color, #ffffff );
+}
+
+.manage-cart-btn--secondary {
+	background: transparent;
+	border-color: var( --manage-cart-border );
+	color: var( --manage-cart-ink );
+}
+
+.manage-cart-btn--secondary:hover {
+	border-color: var( --manage-cart-accent );
+	color: var( --manage-cart-accent );
+}
+
+.manage-cart-empty .manage-cart-btn {
+	flex: 0 0 auto;
+	padding-left: 24px;
+	padding-right: 24px;
+}
+
+/* Desktop: drawer (left/right) and popup layouts, per saved Side Cart settings. */
+@media ( min-width: 769px ) {
+	.manage-cart-trigger {
+		right: 28px;
+		bottom: 28px;
+	}
+
+	.manage-cart-panel--drawer {
+		top: 0;
+		bottom: 0;
+		left: auto;
+		right: auto;
+		width: var( --manage-cart-panel-width, 420px );
+		max-width: 92vw;
+		max-height: none;
+		border-radius: 0;
+		box-shadow: 0 0 40px rgba( 0, 0, 0, 0.22 );
+	}
+
+	.manage-cart-panel--drawer.manage-cart-panel--right {
+		right: 0;
+		transform: translateX( 100% );
+	}
+
+	.manage-cart-panel--drawer.manage-cart-panel--right.is-open {
+		transform: translateX( 0 );
+	}
+
+	.manage-cart-panel--drawer.manage-cart-panel--left {
+		left: 0;
+		transform: translateX( -100% );
+	}
+
+	.manage-cart-panel--drawer.manage-cart-panel--left.is-open {
+		transform: translateX( 0 );
+	}
+
+	.manage-cart-panel--popup {
+		left: 50%;
+		right: auto;
+		bottom: auto;
+		top: 50%;
+		width: min( 92vw, var( --manage-cart-panel-width, 420px ) );
+		max-height: 86vh;
+		border-radius: var( --manage-cart-panel-radius, 16px );
+		box-shadow: 0 24px 60px rgba( 0, 0, 0, 0.28 );
+		transform: translate( -50%, -48% ) scale( 0.97 );
+		opacity: 0;
+	}
+
+	.manage-cart-panel--popup.is-open {
+		transform: translate( -50%, -50% ) scale( 1 );
+		opacity: 1;
+	}
+}

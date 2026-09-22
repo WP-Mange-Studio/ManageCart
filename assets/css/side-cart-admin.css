@@ -1,0 +1,1204 @@
+/**
+ * Manage Cart — Side Cart admin settings page styles (Phase 2B).
+ *
+ * Loaded only on the "Manage Cart → Side Cart" admin page. No external
+ * fonts, CDNs, images, or libraries are used. This file styles the admin
+ * settings form and a static, non-interactive visual preview card only —
+ * it never touches the frontend.
+ *
+ * Phase 3D adds styles for the "Side Cart" / "Floating Cart" section
+ * tablist, each section's "General" / "Style" tabs, and the plain
+ * placeholder message shown in tabs with no controls yet.
+ *
+ * Phase 3G-2A adds styles for the Side Cart → Appearance card and its
+ * native color inputs.
+ *
+ * Phase 3G-2B: the live preview panel/heading/checkout button now read
+ * the saved Side Cart → Appearance values via the same
+ * `--manage-cart-panel-bg-color`, `--manage-cart-header-bg-color`,
+ * `--manage-cart-header-text-color`, `--manage-cart-body-text-color`,
+ * `--manage-cart-checkout-btn-bg-color`, `--manage-cart-checkout-btn-text-color`,
+ * and `--manage-cart-panel-radius` custom properties the real frontend
+ * cart panel uses (see assets/css/frontend.css and
+ * Cart_Renderer::get_appearance_style_string()), each falling back to
+ * this file's previous hard-coded value so the preview's look is
+ * unchanged until a merchant edits Side Cart → Appearance. The preview
+ * card is also now shared by both the General and Appearance subtabs
+ * (see the updated "Two-column layout" rule below), instead of only
+ * appearing while the General subtab is open.
+ *
+ * Phase 3G-3B adds the Floating Cart section's own live preview column
+ * and mock trigger button, styled with the `--manage-cart-trigger-*`
+ * custom properties the real frontend floating trigger button uses (see
+ * assets/css/frontend.css and Cart_Renderer::get_trigger_appearance_style_string()).
+ */
+
+.manage-cart-side-cart-wrap {
+	max-width: 1180px;
+	margin-top: 20px;
+}
+
+/* Section tablist: "Side Cart" / "Floating Cart" (Phase 3D). */
+.manage-cart-section-nav {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin: 4px 0 24px;
+}
+
+.manage-cart-section-tab {
+	display: inline-flex;
+	align-items: center;
+	padding: 10px 22px;
+	border: 1px solid #e3e6ea;
+	border-radius: 8px;
+	font-family: inherit;
+	font-size: 14px;
+	font-weight: 600;
+	color: #50575e;
+	background: #ffffff;
+	cursor: pointer;
+	appearance: none;
+	-webkit-appearance: none;
+	transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.manage-cart-section-tab:hover,
+.manage-cart-section-tab:focus {
+	background: #f3e8ff;
+	color: #6d28d9;
+	border-color: #e9d5ff;
+}
+
+.manage-cart-section-tab.is-active {
+	background: linear-gradient(135deg, #7c3aed, #ec4899);
+	border-color: transparent;
+	color: #ffffff;
+	box-shadow: 0 2px 6px rgba(124, 58, 237, 0.3);
+}
+
+.manage-cart-section-tab.is-active:hover,
+.manage-cart-section-tab.is-active:focus {
+	background: linear-gradient(135deg, #6d28d9, #db2777);
+	color: #ffffff;
+}
+
+/* Per-section "General" / "Style" tabs (Phase 3D). */
+.manage-cart-style-nav {
+	display: flex;
+	gap: 4px;
+	border-bottom: 1px solid #e3e6ea;
+	margin-bottom: 20px;
+}
+
+.manage-cart-style-tab {
+	padding: 10px 18px;
+	border: none;
+	border-bottom: 2px solid transparent;
+	background: transparent;
+	font-family: inherit;
+	font-size: 13px;
+	font-weight: 600;
+	color: #50575e;
+	cursor: pointer;
+	appearance: none;
+	-webkit-appearance: none;
+	transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.manage-cart-style-tab:hover,
+.manage-cart-style-tab:focus {
+	color: #6d28d9;
+}
+
+.manage-cart-style-tab.is-active {
+	color: #9d174d;
+	border-bottom-color: #ec4899;
+}
+
+/* Placeholder message shown in tabs with no controls yet (Phase 3D). */
+.manage-cart-coming-next {
+	background: #f9fafb;
+	border: 1px dashed #d1d5db;
+	border-radius: 10px;
+	padding: 28px 32px;
+	color: #6b7280;
+	font-size: 14px;
+	font-style: italic;
+	max-width: 640px;
+}
+
+.manage-cart-side-cart-title {
+	font-size: 26px;
+	font-weight: 700;
+	color: #1d2327;
+	margin-bottom: 4px;
+}
+
+.manage-cart-side-cart-subtitle {
+	font-size: 14px;
+	color: #50575e;
+	max-width: 640px;
+	margin-top: 0;
+	margin-bottom: 20px;
+}
+
+/* Two-column layout: controls on the left, preview on the right. */
+.manage-cart-side-cart-columns {
+	display: flex;
+	align-items: flex-start;
+	gap: 24px;
+	flex-wrap: wrap;
+}
+
+.manage-cart-side-cart-col-controls {
+	flex: 1 1 560px;
+	min-width: 320px;
+}
+
+/* Sticky on desktop so the preview stays in view while scrolling the
+   (often taller) controls column beside it. `top` accounts for both the
+   32px gap this design wants above the card and the actual height of
+   the WordPress admin bar itself (`--wp-admin--admin-bar--height`, which
+   WordPress sets to 32px on wider screens and 46px on narrow ones; 32px
+   is used as the fallback for older WP versions that don't define it).
+   Phase 3H-8: this column carries no `height`/`overflow-y` at all here —
+   it simply sizes to its own content, same as any normal sticky element.
+   A preview card is never scaled down proportionally to fit; see the
+   `@media (max-height: 800px)` compact-preview rules further down this
+   file, and their extreme-short-viewport `overflow-y: auto` fallback,
+   for how a preview taller than a short window is handled instead. */
+.manage-cart-side-cart-col-preview {
+	flex: 1 1 360px;
+	min-width: 300px;
+	position: sticky;
+	top: calc(32px + var(--wp-admin--admin-bar--height, 32px));
+}
+
+@media (max-width: 960px) {
+	.manage-cart-side-cart-columns {
+		flex-direction: column;
+	}
+
+	/* Mobile/tablet: the plain, non-sticky stacked layout — the preview
+	   simply flows below the controls in normal page scroll. */
+	.manage-cart-side-cart-col-preview {
+		position: static;
+		width: 100%;
+	}
+}
+
+/* Floating Cart → General/Appearance cards: single-column forms, so cap
+   their width the same as the Side Cart cards rather than letting them
+   stretch full width. Phase 3G-3B gives the Floating Cart section its own
+   live preview column (.manage-cart-floating-cart-columns below), placed
+   next to these cards, mirroring .manage-cart-side-cart-columns. */
+.manage-cart-floating-cart-card {
+	max-width: 640px;
+}
+
+/* Floating Cart section layout (Phase 3G-3B): controls column + live
+   preview column, mirroring .manage-cart-side-cart-columns above. */
+.manage-cart-floating-cart-columns {
+	display: flex;
+	align-items: flex-start;
+	gap: 32px;
+}
+
+.manage-cart-floating-cart-col-controls {
+	flex: 1 1 560px;
+	min-width: 320px;
+}
+
+/* Sticky on desktop, mirroring
+   .manage-cart-side-cart-col-preview above — see its comment for why. */
+.manage-cart-floating-cart-col-preview {
+	flex: 1 1 300px;
+	min-width: 260px;
+	position: sticky;
+	top: calc(32px + var(--wp-admin--admin-bar--height, 32px));
+}
+
+@media (max-width: 960px) {
+	.manage-cart-floating-cart-columns {
+		flex-direction: column;
+	}
+
+	/* Mobile/tablet: plain, non-sticky stacked layout, same as the
+	   Side Cart preview column above. */
+	.manage-cart-floating-cart-col-preview {
+		position: static;
+		width: 100%;
+	}
+}
+
+/* Side Cart → Appearance card: shares the same live preview column as
+   Side Cart → General as of Phase 3G-2B (see render_panel_content() in
+   class-side-cart-admin.php), but still renders as a single-column form
+   itself, so cap its own width the same as the Floating Cart → General
+   card rather than letting the form stretch full width. */
+.manage-cart-appearance-card {
+	max-width: 640px;
+}
+
+/* Controls card. */
+.manage-cart-side-cart-card {
+	background: #ffffff;
+	border: 1px solid #e3e6ea;
+	border-left: 4px solid #ec4899;
+	border-radius: 10px;
+	padding: 28px 32px;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.manage-cart-side-cart-card h2 {
+	font-size: 15px;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	color: #9d174d;
+	margin: 28px 0 8px;
+	padding-bottom: 8px;
+	border-bottom: 1px solid #f3e8ff;
+}
+
+.manage-cart-side-cart-card h2:first-child {
+	margin-top: 0;
+}
+
+.manage-cart-side-cart-card .form-table th {
+	font-weight: 600;
+	color: #1d2327;
+	padding-left: 0;
+	width: 220px;
+}
+
+.manage-cart-side-cart-card .form-table td .description {
+	color: #6b7280;
+	font-size: 12px;
+	margin-top: 6px;
+}
+
+.manage-cart-select {
+	min-width: 200px;
+}
+
+.manage-cart-unit {
+	margin-left: 8px;
+	color: #50575e;
+	font-size: 13px;
+}
+
+/* Native color inputs used on Side Cart → Appearance (Phase 3G-2A). Kept
+   as plain native <input type="color"> swatches (no custom picker), just
+   sized and bordered to match the rest of the admin form controls. */
+.manage-cart-color-field {
+	width: 44px;
+	height: 32px;
+	padding: 2px;
+	border: 1px solid #dcdcde;
+	border-radius: 6px;
+	background: #ffffff;
+	cursor: pointer;
+}
+
+.manage-cart-color-field::-webkit-color-swatch-wrapper {
+	padding: 0;
+}
+
+.manage-cart-color-field::-webkit-color-swatch {
+	border: none;
+	border-radius: 3px;
+}
+
+.manage-cart-color-field::-moz-color-swatch {
+	border: none;
+	border-radius: 3px;
+}
+
+.manage-cart-toggle {
+	display: inline-flex;
+	align-items: center;
+	gap: 10px;
+	font-size: 14px;
+	color: #1d2327;
+	cursor: pointer;
+}
+
+.manage-cart-toggle input[type='checkbox'] {
+	width: 18px;
+	height: 18px;
+	border-radius: 4px;
+	border: 1px solid #ec4899;
+}
+
+.manage-cart-toggle input[type='checkbox']:checked {
+	background-color: #ec4899;
+	border-color: #ec4899;
+}
+
+.manage-cart-locked-field {
+	display: inline-flex;
+	align-items: center;
+	gap: 10px;
+	padding: 8px 14px;
+	background: #f9fafb;
+	border: 1px dashed #d1d5db;
+	border-radius: 6px;
+	color: #374151;
+	font-size: 14px;
+}
+
+.manage-cart-locked-badge {
+	display: inline-block;
+	padding: 2px 8px;
+	background: #ede9fe;
+	color: #6d28d9;
+	border-radius: 999px;
+	font-size: 11px;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.03em;
+}
+
+.manage-cart-side-cart-card .submit {
+	margin: 0;
+	padding: 0;
+}
+
+.manage-cart-side-cart-card .submit .button-primary {
+	background: linear-gradient(135deg, #ec4899, #7c3aed);
+	border-color: #7c3aed;
+	box-shadow: none;
+	text-shadow: none;
+}
+
+.manage-cart-side-cart-card .submit .button-primary:hover,
+.manage-cart-side-cart-card .submit .button-primary:focus {
+	background: linear-gradient(135deg, #db2777, #6d28d9);
+	border-color: #6d28d9;
+}
+
+.manage-cart-reset-form {
+	margin-top: 18px;
+	padding-top: 18px;
+	border-top: 1px solid #e3e6ea;
+}
+
+/* Preview card. */
+.manage-cart-preview-card {
+	width: 100%;
+	background: #12101c;
+	border-radius: 14px;
+	padding: 20px;
+	color: #f5f3ff;
+	box-shadow: 0 12px 30px rgba(76, 29, 149, 0.25);
+}
+
+.manage-cart-preview-card-label {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	font-size: 12px;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color: #c4b5fd;
+	margin-bottom: 16px;
+}
+
+.manage-cart-preview-card-badge {
+	background: rgba(236, 72, 153, 0.18);
+	color: #f9a8d4;
+	padding: 2px 9px;
+	border-radius: 999px;
+	font-size: 10px;
+	letter-spacing: 0.03em;
+}
+
+/* Phase 2C: appears once a field has been edited via the live preview
+   script, to reinforce that nothing is saved yet. */
+.manage-cart-preview-card-badge--unsaved {
+	background: rgba(251, 191, 36, 0.2);
+	color: #fbbf24;
+}
+
+.manage-cart-preview-note {
+	margin: 0 0 16px;
+	font-size: 12px;
+	line-height: 1.5;
+	color: #c4b5fd;
+}
+
+/* Phase 3I-1: the "Preview state" switch (Cart items / Empty cart)
+   above the stage. See assets/js/preview-state-toggle.js for how this
+   drives the empty-state modifier below; this is purely the switch's
+   own compact pill-button chrome. */
+.manage-cart-preview-state-switch {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: 8px 10px;
+	margin: 0 0 16px;
+}
+
+.manage-cart-preview-state-switch-label {
+	font-size: 11px;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color: #c4b5fd;
+}
+
+.manage-cart-preview-state-switch-options {
+	display: inline-flex;
+	background: rgba(255, 255, 255, 0.08);
+	border-radius: 999px;
+	padding: 2px;
+	gap: 2px;
+}
+
+.manage-cart-preview-state-btn {
+	border: none;
+	background: transparent;
+	color: #ddd6fe;
+	font-size: 11px;
+	font-weight: 600;
+	line-height: 1.4;
+	padding: 5px 12px;
+	border-radius: 999px;
+	cursor: pointer;
+	transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.manage-cart-preview-state-btn:hover {
+	color: #ffffff;
+}
+
+.manage-cart-preview-state-btn:focus-visible {
+	outline: 2px solid #f9a8d4;
+	outline-offset: 1px;
+}
+
+.manage-cart-preview-state-btn.is-active {
+	background: linear-gradient(135deg, #7c3aed, #ec4899);
+	color: #ffffff;
+}
+
+.manage-cart-preview-stage {
+	position: relative;
+	background: radial-gradient(circle at 30% 20%, rgba(124, 58, 237, 0.35), transparent 60%),
+		#1f1b33;
+	border-radius: 12px;
+	padding: 22px 16px;
+	display: flex;
+	justify-content: flex-end;
+	min-height: 260px;
+}
+
+/* Cart layout: Drawer — the panel hugs one edge of the stage and
+   stretches to its full height, mirroring the real frontend drawer
+   (see .manage-cart-panel--drawer in frontend.css). This is the
+   stage's original behavior, now named explicitly so it can sit
+   alongside the very different Popup layout below.
+
+   Phase 3I-1: `max-height` now caps how tall this stage (and the
+   drawer panel stretching to fill it) can grow, with the panel itself
+   scrolling internally past that point (see
+   `.manage-cart-preview-panel--drawer` below) — the same "clamp, then
+   scroll internally" treatment the Popup layout already had. Without
+   this, a drawer panel carrying every optional preview addition at
+   once (more sample items, a Pro Custom Cart Note, a Pro Cart
+   Recommendations section) had no upper bound at all: the stage has
+   no fixed `height`, only `min-height`, so `align-items: stretch`
+   simply grew it to match however tall the panel's own content
+   happened to be, which could stretch the whole right-side preview
+   column — and the page around it — far taller than the settings
+   column beside it ever needed to be. */
+.manage-cart-preview-stage--drawer {
+	justify-content: flex-end;
+	align-items: stretch;
+	max-height: 460px;
+}
+
+/* Cart layout: Popup — the panel is a centered modal/card over a
+   dark, translucent backdrop (added via ::before below), sized and
+   positioned nothing like the Drawer's edge-hugging strip. A taller
+   stage than the Drawer's default gives the modal real breathing room
+   on every side so it reads as a distinct, centered dialog rather
+   than a squeezed sliver — matching the real frontend popup (see
+   .manage-cart-panel--popup in frontend.css), just scaled to fit this
+   admin preview stage. */
+.manage-cart-preview-stage--popup {
+	justify-content: center;
+	align-items: center;
+	min-height: 260px;
+	height: 380px;
+}
+
+/* Popup-only dark, translucent backdrop, contained within the stage's
+   own rounded corners. Absolutely positioned within the stage (which
+   is why the stage itself needs `position: relative` above) rather
+   than a separate DOM element, so it can never be mistaken for, or
+   collide with, the Cart Recommendations preview section a Pro add-on
+   inserts inside the panel itself. */
+.manage-cart-preview-stage--popup::before {
+	content: '';
+	position: absolute;
+	inset: 0;
+	background: rgba(0, 0, 0, 0.55);
+	border-radius: inherit;
+	z-index: 0;
+}
+
+.manage-cart-preview-panel {
+	position: relative;
+	z-index: 1;
+	/* Desktop width (280-560px, see Side_Cart_Settings::DESKTOP_WIDTH_MIN/MAX)
+	   is shown at its real pixel value whenever the stage has room for
+	   it. `min()` is the "proportional preview scale" this only needs
+	   when the stage does NOT have room: it caps the panel to exactly
+	   100% of the stage's current available width instead of ever
+	   overflowing it, so the represented width shrinks proportionally
+	   with the stage rather than spilling out of it. `max-width: 100%`
+	   is a second, belt-and-suspenders guarantee of the same "never
+	   wider than the stage" rule. `min-width` keeps the panel from being
+	   squeezed below a readable size on the narrowest supported preview
+	   column. (This replaces a leftover `max-width: 260px` from an
+	   earlier, narrower design that was never raised when the allowed
+	   range became 280-560px — it silently capped every value in that
+	   whole range to ~260px, which is why "Desktop width" looked like it
+	   did nothing.) */
+	width: min(var(--manage-cart-preview-width, 420px), 100%);
+	min-width: 200px;
+	max-width: 100%;
+	background: var(--manage-cart-panel-bg-color, #ffffff);
+	color: var(--manage-cart-body-text-color, #1d2327);
+	border-radius: var(--manage-cart-panel-radius, 10px);
+	overflow: hidden;
+	box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+	display: flex;
+	flex-direction: column;
+}
+
+/* Phase 3I-1: the Drawer layout half of the same "clamp the stage,
+   scroll the panel" fix described on `.manage-cart-preview-stage--
+   drawer` above — a drawer panel taller than the stage's own
+   `max-height` scrolls its own content internally instead of forcing
+   the stage (and the page around it) to grow to fit it. Overrides
+   only the vertical axis; the base rule's `overflow: hidden` above
+   still keeps the horizontal axis clipped, exactly like the existing
+   `.manage-cart-preview-panel--popup` override just below does for
+   Popup. */
+.manage-cart-preview-panel--drawer {
+	max-height: 100%;
+	overflow-y: auto;
+}
+
+.manage-cart-preview-panel--left {
+	order: -1;
+}
+
+/* Cart layout: Popup — a noticeably wider, shorter modal/card than the
+   Drawer's narrow strip (not the same cramped 220px cap this rule used
+   to apply), centered by the stage's `justify-content`/`align-items`
+   above, with its own rounded corners and a subtle shadow. Content
+   taller than `max-height` scrolls internally (`overflow-y: auto`)
+   instead of overflowing the modal or the stage — the panel's own
+   `overflow-x: hidden` (inherited from the base rule above, which sets
+   `overflow: hidden` on both axes) still prevents any horizontal
+   scrollbar; only the vertical axis is reopened here. */
+.manage-cart-preview-panel--popup {
+	/* Same fix, same reasoning as the base `.manage-cart-preview-panel`
+	   rule above, just scoped to 90% (not 100%) of the stage so the
+	   popup keeps a visible margin of dark backdrop on every side, same
+	   as before. This replaces a leftover `max-width: 300px` that capped
+	   every allowed 280-560px value above 300px right back down to
+	   300px. */
+	width: min(var(--manage-cart-preview-width, 420px), 90%);
+	max-width: 90%;
+	max-height: 320px;
+	overflow-y: auto;
+	align-self: center;
+	box-shadow: 0 18px 40px rgba(0, 0, 0, 0.4);
+}
+
+.manage-cart-preview-heading {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 12px 14px;
+	background: var(--manage-cart-header-bg-color, linear-gradient(135deg, #7c3aed, #ec4899));
+	color: var(--manage-cart-header-text-color, #ffffff);
+}
+
+.manage-cart-preview-heading-left {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	font-weight: 700;
+	font-size: 13px;
+}
+
+.manage-cart-preview-icon {
+	font-size: 14px;
+	line-height: 1;
+}
+
+.manage-cart-preview-count {
+	background: rgba(255, 255, 255, 0.25);
+	border-radius: 999px;
+	font-size: 11px;
+	font-weight: 700;
+	padding: 2px 8px;
+}
+
+.manage-cart-preview-items {
+	padding: 10px 14px;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.manage-cart-preview-item {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+
+.manage-cart-preview-item-controls {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin-left: auto;
+	flex-shrink: 0;
+}
+
+.manage-cart-preview-item-qty {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	background: #f3f4f6;
+	border-radius: 999px;
+	padding: 2px 4px;
+}
+
+.manage-cart-preview-qty-btn {
+	width: 16px;
+	height: 16px;
+	line-height: 1;
+	padding: 0;
+	border: none;
+	border-radius: 50%;
+	background: #ffffff;
+	color: #1d2327;
+	font-size: 11px;
+	font-weight: 700;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+	cursor: default;
+}
+
+.manage-cart-preview-qty-value {
+	min-width: 14px;
+	text-align: center;
+	font-size: 11px;
+	font-weight: 600;
+}
+
+.manage-cart-preview-item-remove {
+	width: 20px;
+	height: 20px;
+	line-height: 1;
+	padding: 0;
+	border: none;
+	border-radius: 50%;
+	background: #fee2e2;
+	color: #b91c1c;
+	font-size: 12px;
+	font-weight: 700;
+	cursor: default;
+}
+
+.manage-cart-preview-thumb {
+	width: 34px;
+	height: 34px;
+	border-radius: 6px;
+	background-color: #fbcfe8;
+	background-image: linear-gradient(135deg, #fbcfe8, #ddd6fe);
+	background-size: cover;
+	background-position: center;
+	background-repeat: no-repeat;
+	flex-shrink: 0;
+}
+
+.manage-cart-preview-item-text {
+	display: flex;
+	flex-direction: column;
+	line-height: 1.3;
+}
+
+.manage-cart-preview-item-title {
+	font-size: 12px;
+	font-weight: 600;
+}
+
+.manage-cart-preview-item-meta {
+	font-size: 11px;
+	color: #6b7280;
+}
+
+.manage-cart-preview-item-price {
+	font-size: 11px;
+	color: #374151;
+	font-weight: 600;
+}
+
+.manage-cart-preview-item-variation {
+	font-size: 10px;
+	color: #9ca3af;
+	margin-top: 2px;
+}
+
+.manage-cart-preview-footer {
+	padding: 12px 14px 14px;
+	margin-top: auto;
+}
+
+.manage-cart-preview-checkout {
+	width: 100%;
+	padding: 8px 10px;
+	border: none;
+	border-radius: 6px;
+	background: var(--manage-cart-checkout-btn-bg-color, #1d2327);
+	color: var(--manage-cart-checkout-btn-text-color, #ffffff);
+	font-size: 12px;
+	font-weight: 700;
+	cursor: default;
+}
+
+/* Phase 3I-1: the "Empty cart" preview state's own view. Hidden by
+   default (`display: none` below), shown only while the "Preview
+   state" switch is set to "Empty cart" — see the
+   `#manage-cart-preview-card.manage-cart-preview-card--empty-state`
+   rules further down and assets/js/preview-state-toggle.js. `flex: 1`
+   lets it fill the same vertical space the mock items list + footer
+   normally take up (the panel itself is `display: flex; flex-
+   direction: column`), so a Drawer-layout panel stretched to the
+   stage's full height still shows a centered, well-proportioned empty
+   state rather than a short block clinging to the top. */
+.manage-cart-preview-empty {
+	display: none;
+	flex: 1;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	text-align: center;
+	gap: 6px;
+	padding: 28px 20px;
+}
+
+.manage-cart-preview-empty-icon {
+	display: flex;
+	color: #c4b5fd;
+	margin-bottom: 4px;
+}
+
+.manage-cart-preview-empty-icon svg {
+	display: block;
+}
+
+.manage-cart-preview-empty-title {
+	margin: 0;
+	font-size: 13px;
+	font-weight: 700;
+	color: var(--manage-cart-body-text-color, #1d2327);
+}
+
+.manage-cart-preview-empty-text {
+	margin: 0;
+	font-size: 11px;
+	line-height: 1.5;
+	color: #6b7280;
+	max-width: 220px;
+}
+
+.manage-cart-preview-empty-button {
+	margin-top: 10px;
+	padding: 8px 18px;
+	border: none;
+	border-radius: 6px;
+	background: var(--manage-cart-checkout-btn-bg-color, #1d2327);
+	color: var(--manage-cart-checkout-btn-text-color, #ffffff);
+	font-size: 12px;
+	font-weight: 700;
+	cursor: default;
+}
+
+/* Phase 3I-1: the "Empty cart" preview state itself. Toggled purely by
+   assets/js/preview-state-toggle.js adding/removing this one modifier
+   class on `#manage-cart-preview-card` (see that script's docblock for
+   why the card, and not the panel or stage, is the anchor). Every
+   selector below is scoped by the card's own id, giving each rule
+   higher specificity than any single- or double-class rule elsewhere
+   in this file or in a ManageCart Pro preview stylesheet (e.g.
+   `.manage-cart-pro-preview-recommendations[hidden]` in
+   cart-recommendations-preview.css) regardless of which stylesheet
+   happens to load first — so this reliably wins without needing
+   `!important`.
+
+   Nothing here reads or writes any element's own `hidden` attribute:
+   this only ever layers a visual override on top of whatever state
+   each element's owning script has already put it in, so removing
+   this class (switching back to "Cart items") always and immediately
+   shows exactly what was there before. */
+#manage-cart-preview-card.manage-cart-preview-card--empty-state .manage-cart-preview-items,
+#manage-cart-preview-card.manage-cart-preview-card--empty-state .manage-cart-preview-footer,
+#manage-cart-preview-card.manage-cart-preview-card--empty-state .manage-cart-preview-count,
+#manage-cart-preview-card.manage-cart-preview-card--empty-state .manage-cart-pro-preview-note,
+#manage-cart-preview-card.manage-cart-preview-card--empty-state .manage-cart-pro-preview-recommendations {
+	display: none;
+}
+
+#manage-cart-preview-card.manage-cart-preview-card--empty-state .manage-cart-preview-empty {
+	display: flex;
+}
+
+.manage-cart-preview-card [hidden] {
+	display: none;
+}
+
+.manage-cart-preview-summary {
+	list-style: none;
+	margin: 16px 0 0;
+	padding: 14px 0 0;
+	border-top: 1px solid rgba(255, 255, 255, 0.1);
+	font-size: 12px;
+	color: #ddd6fe;
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+/* Floating Cart → Appearance live preview (Phase 3G-3B; mock browser
+   viewport layout added in Phase 3G-4). Reuses the generic
+   .manage-cart-preview-card/-card-label/-card-badge/-note/-stage chrome
+   classes above (shared, section-agnostic wrapper styling) and adds its
+   own inner classes for a small mock browser window — a title bar with
+   three window dots and an address-bar pill, above a gridded "page" area
+   — plus the mock trigger button itself, styled with the same
+   `--manage-cart-trigger-*` CSS custom properties
+   Cart_Renderer::get_trigger_appearance_style_string() writes on the real
+   frontend button, so the mock preview mirrors it without duplicating any
+   underlying styling logic. */
+.manage-cart-floating-cart-preview-stage {
+	display: flex;
+	align-items: stretch;
+	justify-content: center;
+	min-height: 220px;
+}
+
+/* The mock browser window: a subtle border, rounded corners, and a soft
+   shadow so it reads as a small floating viewport rather than a plain
+   box, while staying visually quiet against the surrounding card. */
+.manage-cart-floating-cart-preview-browser {
+	display: flex;
+	flex-direction: column;
+	width: 100%;
+	max-width: 320px;
+	border: 1px solid rgba(196, 181, 253, 0.28);
+	border-radius: 10px;
+	overflow: hidden;
+	background: #19152b;
+	box-shadow: 0 14px 32px rgba(0, 0, 0, 0.35);
+}
+
+.manage-cart-floating-cart-preview-browser-bar {
+	display: flex;
+	align-items: center;
+	flex-shrink: 0;
+	gap: 5px;
+	padding: 8px 10px;
+	background: rgba(255, 255, 255, 0.04);
+	border-bottom: 1px solid rgba(196, 181, 253, 0.18);
+}
+
+.manage-cart-floating-cart-preview-browser-dot {
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	background: rgba(255, 255, 255, 0.2);
+	flex-shrink: 0;
+}
+
+.manage-cart-floating-cart-preview-browser-address {
+	flex: 1;
+	height: 14px;
+	margin-left: 8px;
+	border-radius: 999px;
+	background: rgba(255, 255, 255, 0.06);
+}
+
+/* The mock "page" area the trigger button sits in. A faint grid stands
+   in for page content so the button's corner and offsets read clearly
+   against it, without drawing attention away from the button itself. */
+.manage-cart-floating-cart-preview-viewport {
+	position: relative;
+	flex: 1;
+	min-height: 170px;
+	overflow: hidden;
+	background-color: #16132a;
+	background-image:
+		linear-gradient(rgba(196, 181, 253, 0.08) 1px, transparent 1px),
+		linear-gradient(90deg, rgba(196, 181, 253, 0.08) 1px, transparent 1px);
+	background-size: 18px 18px;
+}
+
+.manage-cart-floating-cart-preview-trigger {
+	position: absolute;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: var(--manage-cart-trigger-size, 58px);
+	height: var(--manage-cart-trigger-size, 58px);
+	padding: 0;
+	border: 0;
+	border-radius: var(--manage-cart-trigger-radius, 50%);
+	background: var(--manage-cart-trigger-bg-color, linear-gradient(135deg, #7c3aed, #ec4899));
+	color: var(--manage-cart-trigger-icon-color, #ffffff);
+	box-shadow: 0 10px 24px rgba(124, 58, 237, 0.35), 0 2px 6px rgba(0, 0, 0, 0.15);
+	cursor: default;
+}
+
+/* Places the mock button in the same screen corner selected by the
+   saved "Position" setting, offset from that corner by the saved
+   Horizontal/Vertical offset values (the same `--manage-cart-trigger-h-offset`
+   / `--manage-cart-trigger-v-offset` custom properties the real frontend
+   trigger uses). The mock viewport above is far smaller than a real
+   screen, so each offset is capped with min() against the viewport's own
+   size — keeping the button fully visible for any saved offset — while
+   still shrinking or growing with it up to that point. */
+.manage-cart-floating-cart-preview-trigger--bottom-right {
+	right: min(var(--manage-cart-trigger-h-offset, 20px), calc(100% - var(--manage-cart-trigger-size, 58px) - 10px));
+	bottom: min(var(--manage-cart-trigger-v-offset, 20px), calc(100% - var(--manage-cart-trigger-size, 58px) - 10px));
+}
+
+.manage-cart-floating-cart-preview-trigger--bottom-left {
+	left: min(var(--manage-cart-trigger-h-offset, 20px), calc(100% - var(--manage-cart-trigger-size, 58px) - 10px));
+	bottom: min(var(--manage-cart-trigger-v-offset, 20px), calc(100% - var(--manage-cart-trigger-size, 58px) - 10px));
+}
+
+.manage-cart-floating-cart-preview-trigger--top-right {
+	right: min(var(--manage-cart-trigger-h-offset, 20px), calc(100% - var(--manage-cart-trigger-size, 58px) - 10px));
+	top: min(var(--manage-cart-trigger-v-offset, 20px), calc(100% - var(--manage-cart-trigger-size, 58px) - 10px));
+}
+
+.manage-cart-floating-cart-preview-trigger--top-left {
+	left: min(var(--manage-cart-trigger-h-offset, 20px), calc(100% - var(--manage-cart-trigger-size, 58px) - 10px));
+	top: min(var(--manage-cart-trigger-v-offset, 20px), calc(100% - var(--manage-cart-trigger-size, 58px) - 10px));
+}
+
+/* Admin-preview dragging (Phase 3H-9; see assets/js/floating-cart-preview.js).
+   `--draggable` is toggled on/off to match "Allow customers to move
+   floating cart button" and shows a grab cursor exactly like the real
+   frontend trigger's own `cursor: grab` in frontend.css, plus
+   `touch-action: none` so touch-dragging doesn't also scroll the page
+   behind it. `--dragging` is added only while a drag is actually in
+   progress, switching to a grabbing cursor — again mirroring the real
+   frontend's `.manage-cart-trigger--dragging`. Neither rule changes the
+   button's background, icon, size, or any other Appearance styling. */
+.manage-cart-floating-cart-preview-trigger--draggable {
+	cursor: grab;
+	touch-action: none;
+}
+
+.manage-cart-floating-cart-preview-trigger--dragging {
+	cursor: grabbing;
+	transition: none;
+}
+
+/* Phase 3H-10: the trigger button sets `display: flex` unconditionally
+   above, which would otherwise outrank the browser's own default
+   `[hidden] { display: none }` rule (same specificity, but this
+   stylesheet loads after the user-agent one). This explicit,
+   higher-specificity override is what lets the plain `hidden` attribute
+   — toggled server-side from the saved "Enable Floating Cart" setting
+   in class-side-cart-admin.php, and live from the checkbox of the same
+   name by assets/js/floating-cart-preview.js — actually hide the mock
+   button, matching the same `hidden`-attribute pattern already used for
+   the "Unsaved" badge elsewhere on this screen. */
+.manage-cart-floating-cart-preview-trigger[hidden] {
+	display: none;
+}
+
+.manage-cart-floating-cart-preview-icon {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.manage-cart-floating-cart-preview-count {
+	position: absolute;
+	top: -4px;
+	right: -4px;
+	min-width: 20px;
+	height: 20px;
+	padding: 0 5px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 999px;
+	background: var(--manage-cart-trigger-badge-bg-color, #1d2327);
+	color: var(--manage-cart-trigger-badge-text-color, #ffffff);
+	font-size: 11px;
+	font-weight: 700;
+	line-height: 1;
+	border: 2px solid #ffffff;
+}
+
+/* Phase 3H-10: same `[hidden]` specificity fix as the trigger button
+   above, so the "Show item count badge" setting can hide this badge
+   with the plain `hidden` attribute despite the unconditional
+   `display: flex` set on it. */
+.manage-cart-floating-cart-preview-count[hidden] {
+	display: none;
+}
+
+/* Phase 3H-11: the "Hide floating cart when cart is empty" explanatory
+   status line, rendered just below the mock browser stage. Reuses
+   `.manage-cart-preview-note`'s type/color so it reads as part of the
+   same live-preview language rather than a second, differently styled
+   preview; this override only swaps its spacing, since here it follows
+   the stage instead of introducing it. Its two child `<span>`s have no
+   competing `display` rule, so their own plain `hidden` attribute
+   (toggled server-side in class-side-cart-admin.php, and live by
+   assets/js/floating-cart-preview.js) is enough on its own — no
+   `[hidden]` override needed here, unlike the trigger/badge above. */
+.manage-cart-floating-cart-preview-empty-status {
+	margin: 14px 0 0;
+}
+
+/**
+ * Phase 3H-8: compact live preview for short desktop windows.
+ *
+ * Earlier phases tried keeping a tall preview card fully visible on a
+ * short desktop window by shrinking the *whole card* proportionally
+ * with a CSS `transform: scale()` (Phase 3H-6/3H-7, driven by
+ * assets/js/preview-auto-scale.js, both removed as of this phase). That
+ * script and its `transform: scale()` are gone completely; the sticky
+ * preview columns above are back to plain `position: sticky` with no
+ * scaling of the card at any size.
+ *
+ * Instead, on a short-but-still-desktop-width window, this trims the
+ * preview card's own internal spacing — padding, gaps, the mock stage's
+ * height, and the summary list's spacing/font — so more of the card's
+ * real content fits without needing to shrink it as a whole. Text stays
+ * at (or very close to) its normal, readable size throughout; nothing
+ * here reduces the item title/meta/variation text, the heading text, or
+ * the checkout button's label. `min-width: 961px` keeps this scoped to
+ * the same desktop breakpoint the sticky two-column layout itself uses;
+ * `max-height: 800px` is the "short window" it targets. A normal-height
+ * desktop window, and the tablet/mobile stacked layout, are completely
+ * unaffected — this rule changes nothing there.
+ */
+@media (min-width: 961px) and (max-height: 800px) {
+	.manage-cart-preview-card {
+		padding: 14px;
+	}
+
+	.manage-cart-preview-card-label {
+		margin-bottom: 10px;
+	}
+
+	.manage-cart-preview-note {
+		margin-bottom: 10px;
+	}
+
+	.manage-cart-preview-state-switch {
+		margin-bottom: 10px;
+	}
+
+	.manage-cart-preview-stage {
+		padding: 14px 10px;
+		min-height: 160px;
+	}
+
+	.manage-cart-preview-stage--drawer {
+		max-height: 320px;
+	}
+
+	.manage-cart-preview-stage--popup {
+		height: 300px;
+	}
+
+	.manage-cart-preview-panel--popup {
+		max-height: 260px;
+	}
+
+	.manage-cart-preview-heading {
+		padding: 9px 12px;
+	}
+
+	.manage-cart-preview-items {
+		padding: 8px 12px;
+		gap: 7px;
+	}
+
+	.manage-cart-preview-footer {
+		padding: 9px 12px 11px;
+	}
+
+	.manage-cart-preview-empty {
+		padding: 18px 16px;
+	}
+
+	/* The summary list is the one place text itself is also trimmed
+	   slightly (12px to 11px), alongside its spacing, since it's the
+	   least essential-to-read part of the card (a recap of settings
+	   already visible in the form on the left) and gives back a
+	   meaningful amount of height for relatively little readability
+	   cost. */
+	.manage-cart-preview-summary {
+		margin-top: 10px;
+		padding-top: 9px;
+		gap: 4px;
+		font-size: 11px;
+	}
+
+	/* The Floating Cart card's own mock browser viewport (see
+	   .manage-cart-floating-cart-preview-stage/-viewport above) is
+	   taller than the generic `.manage-cart-preview-stage` it also
+	   carries, so it needs its own, separate reduction here. */
+	.manage-cart-floating-cart-preview-stage {
+		min-height: 150px;
+	}
+
+	.manage-cart-floating-cart-preview-viewport {
+		min-height: 120px;
+	}
+}
+
+/**
+ * Phase 3H-8: extreme-short-viewport fallback.
+ *
+ * The compact spacing above comfortably fits a normal preview card into
+ * any ordinary short-desktop-window case. On a much shorter window than
+ * that, the compact card can still end up taller than the space left
+ * below it — rather than letting it run below the browser's visible
+ * area (or scaling it down further, which Phase 3H-8 deliberately moves
+ * away from), the sticky preview column itself falls back to scrolling
+ * internally: `max-height` caps it to the space actually available
+ * below the admin bar (mirroring the `top` offset above it), and
+ * `overflow-y: auto` lets only a card that still doesn't fit within
+ * that scroll. A column short enough for its (compact) content already
+ * fits within this `max-height` is completely unaffected — `max-height`
+ * only ever constrains, never stretches, so no scrollbar appears unless
+ * one is actually needed.
+ */
+@media (min-width: 961px) and (max-height: 600px) {
+	.manage-cart-side-cart-col-preview,
+	.manage-cart-floating-cart-col-preview {
+		max-height: calc(100vh - 96px);
+		overflow-y: auto;
+	}
+}

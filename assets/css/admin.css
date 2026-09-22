@@ -1,0 +1,113 @@
+/**
+ * Manage Cart — admin settings page styles.
+ *
+ * Loaded only on the Manage Cart settings page. No external fonts, CDNs,
+ * images, or libraries are used.
+ */
+
+/*
+ * Phase 3F-3: force every hidden admin panel on the shared Manage Cart
+ * screen to `display: none`, regardless of any other display rule that
+ * might otherwise apply to it (e.g. flex/block/grid rules used for
+ * layout when the panel is visible). All tab switching on this screen
+ * (see assets/js/app-header-tabs.js and
+ * assets/js/side-cart-section-tabs.js) sets the native `hidden`
+ * attribute rather than removing elements from the DOM, so a save
+ * notice rendered inside one of these panels stays in the DOM after its
+ * tab is switched away from. The browser's own default styles already
+ * hide `[hidden]` elements, but that default has the same low
+ * specificity as any other single-attribute-or-class selector and is
+ * therefore easy to accidentally override; `!important` here guarantees
+ * a hidden tab's contents — including any notice inside it — can never
+ * visually leak into whichever tab is actually active, no matter what
+ * other CSS is loaded on this screen.
+ */
+.manage-cart-app-panel[hidden],
+.manage-cart-section-panel[hidden],
+.manage-cart-style-panel[hidden] {
+	display: none !important;
+}
+
+.manage-cart-settings-wrap {
+	max-width: 720px;
+	margin-top: 20px;
+}
+
+.manage-cart-settings-wrap h1 {
+	font-size: 24px;
+	font-weight: 700;
+	color: #1d2327;
+	margin-bottom: 16px;
+}
+
+.manage-cart-settings-card {
+	background: #ffffff;
+	border: 1px solid #e3e6ea;
+	border-left: 4px solid #7c3aed;
+	border-radius: 8px;
+	padding: 28px 32px;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.manage-cart-settings-card .form-table th {
+	font-weight: 600;
+	color: #1d2327;
+	padding-left: 0;
+}
+
+.manage-cart-toggle {
+	display: inline-flex;
+	align-items: center;
+	gap: 10px;
+	font-size: 14px;
+	color: #1d2327;
+	cursor: pointer;
+}
+
+.manage-cart-toggle input[type='checkbox'] {
+	width: 18px;
+	height: 18px;
+	border-radius: 4px;
+	border: 1px solid #7c3aed;
+}
+
+.manage-cart-toggle input[type='checkbox']:checked {
+	background-color: #7c3aed;
+	border-color: #7c3aed;
+}
+
+.manage-cart-warning {
+	margin-top: 10px;
+	margin-bottom: 0;
+	padding: 10px 14px;
+	background: #fff7e6;
+	border-left: 3px solid #dba617;
+	border-radius: 4px;
+	font-size: 13px;
+	color: #6b4f00;
+	max-width: 480px;
+}
+
+.manage-cart-settings-card .submit {
+	margin: 0;
+	padding: 0;
+}
+
+.manage-cart-settings-card .submit .button-primary {
+	background: #7c3aed;
+	border-color: #6d28d9;
+	box-shadow: none;
+	text-shadow: none;
+}
+
+.manage-cart-settings-card .submit .button-primary:hover,
+.manage-cart-settings-card .submit .button-primary:focus {
+	background: #6d28d9;
+	border-color: #5b21b6;
+}
+
+.manage-cart-reset-form {
+	margin-top: 18px;
+	padding-top: 18px;
+	border-top: 1px solid #e3e6ea;
+}

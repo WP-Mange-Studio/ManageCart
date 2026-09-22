@@ -1,0 +1,161 @@
+/**
+ * Manage Cart — shared in-page app header styles (Phase 2C).
+ *
+ * Loaded on both Manage Cart admin pages (the global Settings page and the
+ * Side Cart page). No external fonts, CDNs, images, or libraries are used.
+ * This file styles the original in-page header/tabs component and (as of
+ * Phase 3E-5) the shared sticky action-bar wrapper each settings card uses
+ * around its own Save Changes button; it never touches the frontend.
+ */
+
+.manage-cart-app-header {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 20px;
+	background: #ffffff;
+	border: 1px solid #e3e6ea;
+	border-radius: 10px;
+	padding: 14px 20px;
+	margin: 20px 0 24px;
+	box-shadow: 0 1px 2px rgba( 0, 0, 0, 0.04 );
+}
+
+.manage-cart-app-header-brand {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	flex: 0 0 auto;
+}
+
+.manage-cart-app-header-icon.dashicons {
+	width: 22px;
+	height: 22px;
+	font-size: 22px;
+	color: #7c3aed;
+}
+
+.manage-cart-app-header-name {
+	font-size: 15px;
+	font-weight: 700;
+	color: #1d2327;
+	white-space: nowrap;
+}
+
+.manage-cart-app-header-version {
+	display: inline-block;
+	background: #f3e8ff;
+	color: #6d28d9;
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: 0.02em;
+	padding: 2px 8px;
+	border-radius: 999px;
+	white-space: nowrap;
+}
+
+/**
+ * Edition pill (Free/Pro), shown right after the version pill above.
+ * Deliberately shares its shape (size, padding, radius, weight) so the
+ * two pills read as one consistent group; only the color changes to
+ * distinguish the two editions. Admin-only — see App_Header::render().
+ */
+.manage-cart-app-header-edition {
+	display: inline-block;
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: 0.02em;
+	padding: 2px 8px;
+	border-radius: 999px;
+	white-space: nowrap;
+}
+
+.manage-cart-app-header-edition.is-free {
+	background: #f0f0f1;
+	color: #50575e;
+}
+
+.manage-cart-app-header-edition.is-pro {
+	background: linear-gradient( 135deg, #7c3aed, #ec4899 );
+	color: #ffffff;
+}
+
+.manage-cart-app-header-tabs {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	flex: 1 1 auto;
+}
+
+.manage-cart-app-header-tab {
+	display: inline-flex;
+	align-items: center;
+	padding: 8px 16px;
+	border-radius: 8px;
+	font-family: inherit;
+	font-size: 13px;
+	font-weight: 600;
+	color: #50575e;
+	text-decoration: none;
+	background: transparent;
+	border: 1px solid transparent;
+	cursor: pointer;
+	appearance: none;
+	-webkit-appearance: none;
+	transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.manage-cart-app-header-tab:hover,
+.manage-cart-app-header-tab:focus {
+	background: #f3e8ff;
+	color: #6d28d9;
+}
+
+.manage-cart-app-header-tab.is-active {
+	background: linear-gradient( 135deg, #7c3aed, #ec4899 );
+	border-color: transparent;
+	color: #ffffff;
+	box-shadow: 0 2px 6px rgba( 124, 58, 237, 0.35 );
+}
+
+.manage-cart-app-header-tab.is-active:hover,
+.manage-cart-app-header-tab.is-active:focus {
+	background: linear-gradient( 135deg, #6d28d9, #db2777 );
+	color: #ffffff;
+}
+
+@media ( max-width: 640px ) {
+	.manage-cart-app-header {
+		flex-direction: column;
+		align-items: stretch;
+	}
+}
+
+/**
+ * Phase 3E-5: shared wrapper around each settings card's own real Save
+ * Changes button (Global Settings, Side Cart → General, Floating Cart →
+ * General). Right-aligns the button inside the card at all times; on
+ * desktop-width screens it also becomes sticky to the bottom of the
+ * viewport while the merchant scrolls through that card's fields, so the
+ * button stays reachable without scrolling all the way down. It naturally
+ * stops sticking once the browser scrolls past the bottom edge of the
+ * card it belongs to, since a sticky element can never move past its own
+ * containing block.
+ */
+.manage-cart-card-actions {
+	display: flex;
+	justify-content: flex-end;
+	margin-top: 24px;
+}
+
+@media ( min-width: 783px ) {
+	.manage-cart-card-actions {
+		position: sticky;
+		bottom: 0;
+		background: #ffffff;
+		padding: 16px 0;
+		margin-top: 8px;
+		border-top: 1px solid #e3e6ea;
+		z-index: 10;
+	}
+}
